@@ -37,6 +37,18 @@ class ShoppingCart:
             del self.items[product]
             return True
         return False
+    def update_quantity(self, product, quantity):
+        if product in self.items:
+            diff = quantity - self.items[product]
+            if product.update_stock(diff):
+                self.items[product] = quantity
+                return True
+            else:
+                return False # Not enough stock to update
+        return False # Product not in cart
+
+    def calculate_total(self):
+        return sum(product.price * qty for product, qty in self.items.items())
 
     def apply_discount(self, percentage):
         return sum(product.price * qty * (1 - percentage / 100) for product, qty in self.items.items())
@@ -47,16 +59,49 @@ class Order:
         self.total_price = customer.cart.apply_discount(0)
 
     def process_order(self):
+        print(f"Processing order for {self.customer.name}...")
+        print("--- Order Details ---")
+        for product, quantity in self.items.items():
+            print(f"- {product.name}: {quantity} x ${product.price:.2f} = ${product.price * quantity:.2f}")
+        print(f"---")
+        print(f"Subtotal: ${self.customer.cart.calculate_total():.2f}")
+        print(f"Total Price: ${self.total_price:.2f}")
         self.customer.cart.items.clear()
-        return f"Order processed for {self.customer.name}. Total: ${self.total_price:.2f}"
+        return f"Order processed successfully for {self.customer.name}. Total: ${self.total_price:.2f}"
 
-# Example usage
-product1 = Product("Laptop", 1000, 5)
-product2 = Product("Phone", 500, 10)
+
+# Example usage with new features
+product1 = Product("Laptop", 1000, 5, "Powerful laptop for work and gaming.")
+product2 = Product("Phone", 500, 10, "Latest smartphone with a great camera.")
+product3 = Product("Headphones", 100, 20, "Noise-canceling headphones for immersive audio.")
 
 customer = Customer("Alice")
 customer.add_to_cart(product1, 1)
 customer.add_to_cart(product2, 2)
 
+print("\n--- Initial Cart ---")
+for product, quantity in customer.cart.items.items():
+    print(f"{product.name}: {quantity}")
+
+# Update quantity in cart
+print("\n--- Updating Cart Quantity ---")
+if customer.update_cart_quantity(product2, 3):
+    print(f"Updated quantity of {product2.name} to 3.")
+else:
+    print(f"Could not update quantity of {product2.name}.")
+
+print("\n--- Cart after update ---")
+for product, quantity in customer.cart.items.items():
+    print(f"{product.name}: {quantity}")
+
 order = Order(customer)
-print(order.process_order())# E-commerce-system-
+print("\n--- Processing Order ---")
+print(order.process_order())
+
+print("\n--- Cart after order ---")
+print(f"Number of items in {customer.name}'s cart: {len(customer.cart.items)}")
+
+print("\n--- Product Stock after order ---")
+print(f"{product1.name} stock: {product1.stock}")
+print(f"{product2.name} stock: {product2.stock}")
+print(f"{product3.name} stock: {product3.stock}")
